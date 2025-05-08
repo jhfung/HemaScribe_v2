@@ -79,7 +79,7 @@ Afterwards, you can install the current version of HemaScribe from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("jhfung/HemaScribe")
+devtools::install_github("RabadanLab/HemaScribe")
 ```
 
 When the package is installed, reference data files will be
