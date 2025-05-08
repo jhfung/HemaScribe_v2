@@ -48,14 +48,14 @@ download_data <- function(dataDir = NA) {
 
   piggyback::pb_download(
     file="HemaScribe-data.rdx",
-    repo="jhfung/HemaScribe",
+    repo="RabadanLab/HemaScribe",
     dest=dataDir,
     overwrite=TRUE
   )
 
   piggyback::pb_download(
     file="HemaScribe-data.rdb",
-    repo="jhfung/HemaScribe",
+    repo="RabadanLab/HemaScribe",
     dest=dataDir,
     overwrite=TRUE
   )
@@ -80,7 +80,7 @@ download_mapping_data <- function(dataDir = NA) {
   # Download mapping internal data from GitHub release using piggyback
   piggyback::pb_download(
     file = "HemaScape-data.rda",  # file name in the release
-    repo = "jhfung/HemaScribe",   # repository
+    repo = "RabadanLab/HemaScribe",   # repository
     dest = dataDir,               # destination directory
     overwrite = TRUE              # overwrite if the file already exists
   )

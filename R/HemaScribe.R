@@ -80,6 +80,8 @@ broad_classify <- function(input, return.full = FALSE) {
   labels <- HemaScribeData$ref.bulk$labels
 
   pred <- SingleR::SingleR(test = sce, ref = ref, labels = labels)
+  pred$labels[pred$labels == "GMP"] <- "mGMP"
+  pred$pruned.labels[pred$pruned.labels == "GMP"] <- "mGMP"
 
   if (return.full) {
     return(pred)
@@ -162,6 +164,7 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
     dims = 1:30,
     verbose = FALSE
   )
+  pred$predicted.id[pred$predicted.id == "CFUE"] <- "EryP"
 
   if (return.full) {
     return(pred)
@@ -211,6 +214,7 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
   rlang::inform("Returning final annotations")
   if (!skip.fine) {
     annotations.combined <- merge(annotation.broad["pruned.labels"], annotation.fine["predicted.id"], by=0, all.x=TRUE)
+
     rownames(annotations.combined) <- annotations.combined$Row.names
     annotations.combined$Row.names <- NULL
   } else {

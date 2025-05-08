@@ -58,10 +58,14 @@ The basic outputs of HemaScape trajectory mapping include:
 
 ## Installation
 
-HemaScribe requires the following non-CRAN packages: -
-[scater](https://www.bioconductor.org/packages/release/bioc/html/scater.html) -
-[SingleR](https://www.bioconductor.org/packages/release/bioc/html/SingleR.html) -
-[UCell](https://www.bioconductor.org/packages/release/bioc/html/UCell.html).
+HemaScribe requires the following non-CRAN packages:
+
+- [scater](https://www.bioconductor.org/packages/release/bioc/html/scater.html)
+
+- [SingleR](https://www.bioconductor.org/packages/release/bioc/html/SingleR.html)
+
+- [UCell](https://www.bioconductor.org/packages/release/bioc/html/UCell.html).
+
 Please ensure that they are available prior to installing HemaScribe.
 These packages can be installed from Bioconductor:
 
@@ -84,7 +88,7 @@ devtools::install_github("RabadanLab/HemaScribe")
 
 When the package is installed, reference data files will be
 automatically downloaded from the [latest
-release](https://github.com/jhfung/HemaScribe/releases). This is
+release](https://github.com/RabadanLab/HemaScribe/releases). This is
 required for the package to function.
 
 ## Example
@@ -103,6 +107,7 @@ suppressPackageStartupMessages({
 })
 
 # Download Collins et al. (2024) data from GEO.
+options(timeout = 1000)
 collins2024.seurat <- ReadMtx(
   mtx = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM7712015&format=file&file=GSM7712015%5FAA003%5Fmatrix%2Emtx%2Egz",
   cells = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM7712015&format=file&file=GSM7712015%5FAA003%5Fbarcodes%2Etsv%2Egz",
@@ -123,9 +128,9 @@ collins2024.seurat <- HemaScribe(collins2024.seurat, return.full = FALSE)
 
 head(collins2024.seurat$HSPC.annot)
 #> AAACCCAAGCCTGTCG-1 AAACCCAAGCTCACTA-1 AAACCCAAGTATGTAG-1 AAACCCACAAATTGGA-1 
-#>          "NotHSPC"          "NotHSPC"             "MPP2"             "MPP4" 
+#>              "GMP"              "GMP"             "MPP2"             "MPP4" 
 #> AAACCCACAATTTCGG-1 AAACCCATCACGTCCT-1 
-#>             "EryP"          "NotHSPC"
+#>             "EryP"              "GMP"
 ```
 
 Normally, HemaScribe annotation should be run on processed data, after

@@ -1,3 +1,8 @@
+# HemaScribe 0.3.2
+
+* Fixed bug from GMP label conversion
+* Updated references to old repository
+
 # HemaScribe 0.3.1
 
 * Added instructions for installing non-CRAN dependencies to README

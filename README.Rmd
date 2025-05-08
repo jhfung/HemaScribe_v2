@@ -47,9 +47,13 @@ The basic outputs of HemaScape trajectory mapping include:
 ## Installation
 
 HemaScribe requires the following non-CRAN packages:
+
 - [scater](https://www.bioconductor.org/packages/release/bioc/html/scater.html)
+
 - [SingleR](https://www.bioconductor.org/packages/release/bioc/html/SingleR.html)
+
 - [UCell](https://www.bioconductor.org/packages/release/bioc/html/UCell.html).
+
 Please ensure that they are available prior to installing HemaScribe.  These packages can be installed from Bioconductor:
 ``` r
 if (!require("BiocManager", quietly = TRUE))
@@ -64,10 +68,10 @@ Afterwards, you can install the current version of HemaScribe from [GitHub](http
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("jhfung/HemaScribe")
+devtools::install_github("RabadanLab/HemaScribe")
 ```
 
-When the package is installed, reference data files will be automatically downloaded from the [latest release](https://github.com/jhfung/HemaScribe/releases).  This is required for the package to function.  
+When the package is installed, reference data files will be automatically downloaded from the [latest release](https://github.com/RabadanLab/HemaScribe/releases).  This is required for the package to function.  
 
 ## Example
 
@@ -83,6 +87,7 @@ suppressPackageStartupMessages({
 })
 
 # Download Collins et al. (2024) data from GEO.
+options(timeout = 1000)
 collins2024.seurat <- ReadMtx(
   mtx = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM7712015&format=file&file=GSM7712015%5FAA003%5Fmatrix%2Emtx%2Egz",
   cells = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM7712015&format=file&file=GSM7712015%5FAA003%5Fbarcodes%2Etsv%2Egz",
