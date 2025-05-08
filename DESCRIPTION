@@ -1,0 +1,37 @@
+Package: HemaScribe
+Title: Hematopoietic Cell Type Annotations and Mapping of Query Cells to the HemaScribe Reference Trajectory
+Version: 0.3.1
+Author: Jun Hou Fung, Ziwei Chen
+Maintainer: Jun Hou Fung <jf3380@cumc.columbia.edu>, Ziwei Chen <zc2703@cumc.columbia.edu>
+Description: This package performs multilevel annotation of hematopoietic stem and
+    progenitor cells in the murine bone marrow using bulk and single-cell
+    transcriptomic references. It maps query cells to a pre-built HemaScape
+    reference of the DensityPath trajectory using the Symphony algorithm,
+    enabling Elastic Embedding (EE) projection and the prediction of branch
+    assignments, density clusters, refined density clusters along each
+    trajectory branch, and pseudotime.
+License: GPL (>= 3)
+URL: https://github.com/jhfung/HemaScribe
+BugReports: https://github.com/jhfung/HemaScribe/issues
+Depends: 
+    R (>= 2.10)
+Imports:
+    AnnotationDbi,
+    FNN,
+    gdistance,
+    org.Mm.eg.db,
+    piggyback,
+    raster,
+    rlang,
+    scater (>= 1.30.1),
+    Seurat (>= 5.0.0),
+    SeuratObject (>= 5.0.0),
+    SingleCellExperiment,
+    SingleR (>= 2.4.1),
+    stringr,
+    SummarizedExperiment (>= 1.32.0),
+    symphony,
+    UCell
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
