@@ -4,7 +4,7 @@
 #' This function maps query cells to a pre-built HemaScape reference of the DensityPath trajectory using the Symphony algorithm.
 #' It performs EE projection, and predicts branch assignments, density clusters, refined density clusters along each trajectory branch, and pseudotime.
 #'
-#' @param input A Seurat obejct with count data.
+#' @param input A Seurat object with count data.
 #' @param vars Query batch variable(s) to integrate over (column names in metadata of the Seurat object).
 #' @param sigma Fuzziness parameter for soft clustering (sigma = 1 is hard clustering; default: 0.1).
 #'

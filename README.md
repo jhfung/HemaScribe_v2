@@ -58,14 +58,13 @@ The basic outputs of HemaScape trajectory mapping include:
 
 ## Installation
 
-HemaScribe requires the following non-CRAN packages:
-
-- [scater](https://www.bioconductor.org/packages/release/bioc/html/scater.html)
-
-- [SingleR](https://www.bioconductor.org/packages/release/bioc/html/SingleR.html)
-
-- [UCell](https://www.bioconductor.org/packages/release/bioc/html/UCell.html).
-
+HemaScribe requires the following non-CRAN packages to run:
+[scater](https://www.bioconductor.org/packages/release/bioc/html/scater.html),
+[SingleR](https://www.bioconductor.org/packages/release/bioc/html/SingleR.html),
+[UCell](https://www.bioconductor.org/packages/release/bioc/html/UCell.html),
+[AnnotationDbi](https://bioconductor.org/packages/release/bioc/html/AnnotationDbi.html),
+and
+[org.Mm.eg.db](https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html).
 Please ensure that they are available prior to installing HemaScribe.
 These packages can be installed from Bioconductor:
 
@@ -76,6 +75,8 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("scater")
 BiocManager::install("SingleR")
 BiocManager::install("UCell")
+BiocManager::install("AnnotationDbi")
+BiocManager::install("org.Mm.eg.db")
 ```
 
 Afterwards, you can install the current version of HemaScribe from
@@ -196,6 +197,13 @@ DimPlot(collins2024.seurat, reduction = "EE", group.by = "density_cluster_pred")
 
 ## View predicted pseudotime on predicted EE embedding
 FeaturePlot(collins2024.seurat,  reduction = "EE", features = "pseudotime_pred")
+#> Warning: The `slot` argument of `FetchData()` is deprecated as of SeuratObject 5.0.0.
+#> ℹ Please use the `layer` argument instead.
+#> ℹ The deprecated feature was likely used in the Seurat package.
+#>   Please report the issue at <https://github.com/satijalab/seurat/issues>.
+#> This warning is displayed once every 8 hours.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
 ```
 
 <img src="man/figures/README-unnamed-chunk-4-4.png" width="80%" />
