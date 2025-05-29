@@ -1,3 +1,6 @@
+# HemaScribe 1.0.0
+* Added link to bioRxiv preprint.
+
 # HemaScribe 0.3.2
 
 * Fixed bug from GMP label conversion

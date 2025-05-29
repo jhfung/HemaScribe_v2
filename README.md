@@ -20,7 +20,13 @@ reference using the
 enabling Elastic Embedding (EE) projection and the prediction of branch
 assignments, density clusters, refined density clusters along each
 trajectory branch, and pseudotime. For more details, please see our
-publication: \[link to publication here\].
+[preprint on
+bioRxiv](https://www.biorxiv.org/content/10.1101/2025.05.28.656712v1):
+
+> James W. Swann, Jun Hou Fung, Ziwei Chen, et al. Quantitative
+> molecular cartography of emergency myelopoiesis reveals conserved
+> modules of hematopoietic activation. bioRxiv 2025.05.28.656712; doi:
+> <https://doi.org/10.1101/2025.05.28.656712>
 
 The basic outputs of HemaScribe annotation are:
 
@@ -92,7 +98,7 @@ automatically downloaded from the [latest
 release](https://github.com/RabadanLab/HemaScribe/releases). This is
 required for the package to function.
 
-## Example
+## Example usage
 
 ### Example 1: HemaScribe Annotation
 
@@ -210,3 +216,8 @@ FeaturePlot(collins2024.seurat,  reduction = "EE", features = "pseudotime_pred")
 
 Like HemaScribe, HemaScape mapping should be performed on processed data
 after quality control filtering and other preprocessing steps.
+
+# Citation
+
+If you use our package, please cite our [preprint on
+bioRxiv](https://www.biorxiv.org/content/10.1101/2025.05.28.656712v1).
