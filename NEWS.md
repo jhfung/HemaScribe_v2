@@ -1,3 +1,7 @@
+# HemaScribe 1.1.0
+* Added function to classify stromal cell types.
+* Added new stromal reference dataset.
+
 # HemaScribe 1.0.0
 * Added link to bioRxiv preprint.
 

@@ -4,10 +4,14 @@
 \alias{download_data}
 \title{Download reference data}
 \usage{
-download_data(dataDir = NA)
+download_data(file, repo, dataDir = NA)
 }
 \arguments{
-\item{dataDir}{Specifies where the reference data should be downloaded.  Should essentially never be altered by the user directly since the package looks for the data in a specific location.}
+\item{file}{Name of file to be downloaded}
+
+\item{repo}{GitHub repository from which file is downloaded}
+
+\item{dataDir}{Path where the data should be downloaded (default: package-managed user directory)}
 }
 \description{
 Downloads the reference data from the Github repo.  The user is prompted for

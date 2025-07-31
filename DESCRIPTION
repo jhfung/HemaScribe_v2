@@ -1,6 +1,6 @@
 Package: HemaScribe
 Title: Hematopoietic Cell Type Annotations and Mapping of Query Cells to the HemaScribe Reference Trajectory
-Version: 1.0.0
+Version: 1.1.0
 Author: Jun Hou Fung, Ziwei Chen
 Maintainer: Jun Hou Fung <jf3380@cumc.columbia.edu>, Ziwei Chen <zc2703@cumc.columbia.edu>
 Description: This package performs multilevel annotation of hematopoietic stem and
@@ -9,7 +9,8 @@ Description: This package performs multilevel annotation of hematopoietic stem a
     reference of the DensityPath trajectory using the Symphony algorithm,
     enabling Elastic Embedding (EE) projection and the prediction of branch
     assignments, density clusters, refined density clusters along each
-    trajectory branch, and pseudotime.
+    trajectory branch, and pseudotime. Starting with version 1.1.0, stroma cell
+    type annotations are included.
 License: GPL (>= 3)
 URL: https://github.com/RabadanLab/HemaScribe
 BugReports: https://github.com/RabadanLab/HemaScribe/issues
