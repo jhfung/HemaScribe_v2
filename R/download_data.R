@@ -9,7 +9,7 @@ HemaScribeData <- new.env(parent=emptyenv())
     for (file in files) {
       path <- file.path(dataDir, file)
       if (!file.exists(path)) {
-        repo <- if (startsWith(file, "StromaScribe")) {
+        repo <- if (startsWith(file, "HemaScribe") | startsWith(file, "StromaScribe")) {
           "jhfung/HemaScribe_v2"
         } else {
           "RabadanLab/HemaScribe"

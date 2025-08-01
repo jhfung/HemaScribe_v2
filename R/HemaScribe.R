@@ -4,12 +4,13 @@
 #' scores from a hematopoietic gene list.
 #'
 #' @param input A SingleCellExperiment or Seurat object
+#' @param ncores Number of cores to use (default: 4)
 #' @returns A dataframe of hematopoietic gene scores
 #' @importFrom scater logNormCounts
 #' @importFrom UCell ScoreSignatures_UCell
 #' @importFrom SingleR SingleR
 #' @export
-hematopoietic_score <- function(input) {
+hematopoietic_score <- function(input, ncores=4) {
   if (inherits(input, "SingleCellExperiment")) {
     sce <- input
 
@@ -19,7 +20,7 @@ hematopoietic_score <- function(input) {
       hem.sig <- list(hematopoietic.score = HemaScribeData$hematopoietic.genes$geneSymbol)
     }
 
-    sce <- UCell::ScoreSignatures_UCell(sce, features=hem.sig, name=NULL, ncores=4)
+    sce <- UCell::ScoreSignatures_UCell(sce, features=hem.sig, name=NULL, ncores=ncores)
 
     hem.scores <- data.frame(t(SummarizedExperiment::assay(SingleCellExperiment::altExp(sce, "UCell"))))
 
@@ -32,7 +33,7 @@ hematopoietic_score <- function(input) {
       hem.sig <- list(hematopoietic.score = HemaScribeData$hematopoietic.genes$geneSymbol)
     }
 
-    seurat <- UCell::AddModuleScore_UCell(seurat, features=hem.sig, name=NULL, ncores=4)
+    seurat <- UCell::AddModuleScore_UCell(seurat, features=hem.sig, name=NULL, ncores=ncores)
 
     hem.scores <- data.frame(seurat$hematopoietic.score)
     colnames(hem.scores) <- "hematopoietic.score"
@@ -72,27 +73,33 @@ broad_classify <- function(input, return.full = FALSE) {
     sce <- scater::logNormCounts(sce)
   }
 
-  if (startsWith(rownames(sce)[1], "ENSMUSG")) {
-    ref <- HemaScribeData$ref.bulk$refs.geneIds
-  } else {
-    ref <- HemaScribeData$ref.bulk$refs.geneSymbols
+  if (!startsWith(rownames(sce)[1], "ENSMUSG")) {
+    gene_ids <- AnnotationDbi::mapIds(
+      org.Mm.eg.db::org.Mm.eg.db,
+      keys = rownames(sce),
+      column = "ENSEMBL",
+      keytype = "SYMBOL"
+    )
+    gene_ids <- unique(gene_ids[!is.na(gene_ids)])
+    sce <- sce[names(gene_ids),]
+    rownames(sce) <- gene_ids
   }
+
+  ref <- HemaScribeData$ref.bulk$refs
   labels <- HemaScribeData$ref.bulk$labels
 
   pred <- SingleR::SingleR(test = sce, ref = ref, labels = labels)
-  pred$labels[pred$labels == "GMP"] <- "mGMP"
-  pred$pruned.labels[pred$pruned.labels == "GMP"] <- "mGMP"
 
   if (return.full) {
     return(pred)
   }
 
   if (inherits(input, "SingleCellExperiment")) {
-    sce$broad.annot <- pred$pruned.labels
-    return(sce)
+    input$broad.annot <- pred$pruned.labels
+    return(input)
   } else if (inherits(input, "Seurat")) {
-    seurat <- Seurat::AddMetaData(input, metadata = pred$pruned.labels, col.name = "broad.annot")
-    return(seurat)
+    input <- Seurat::AddMetaData(input, metadata = pred$pruned.labels, col.name = "broad.annot")
+    return(input)
   }
 }
 
@@ -109,16 +116,35 @@ broad_classify <- function(input, return.full = FALSE) {
 #' @export
 fine_classify <- function(input, reference = "WT", return.full = FALSE) {
   if (inherits(input, "Seurat")) {
-    seurat <- input
+    exp_query <- input[["RNA"]]$counts
+    metadata_query <- input@meta.data
   } else if (inherits(input, "SingleCellExperiment")) {
-    seurat <- SeuratObject::as.Seurat(input)
+    exp_query <- SingleCellExperiment::counts(input)
+    metadata_query <- SingleCellExperiment::colData(input)
   } else {
     stop("Only SingleCellExperiment and Seurat formats are supported.")
   }
 
-  if (!("data" %in% SeuratObject::Layers(seurat))) {
-    stop("Layer 'data' not available in Seurat object. Please normalize data first.")
+  if (!startsWith(rownames(exp_query)[1], "ENSMUSG")) {
+    gene_ids <- AnnotationDbi::mapIds(
+      org.Mm.eg.db::org.Mm.eg.db,
+      keys = rownames(exp_query),
+      column = "ENSEMBL",
+      keytype = "SYMBOL"
+    )
+    gene_ids <- unique(gene_ids[!is.na(gene_ids)])
+    exp_query <- exp_query[names(gene_ids),]
+    rownames(exp_query) <- gene_ids
   }
+
+  query <- Seurat::CreateSeuratObject(
+    counts = exp_query,
+    meta.data = metadata_query
+  )
+
+  query <- Seurat::NormalizeData(query)
+  query <- Seurat::ScaleData(query)
+  query <- Seurat::RunPCA(query)
 
   if (!(reference %in% c("WT", "5FU"))) {
     stop("Reference must be one of 'WT' or '5FU'.")
@@ -129,50 +155,36 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
     ref <- HemaScribeData$ref.sc.5fu
   }
 
-  if (startsWith(rownames(seurat)[1], "ENSMUSG")) {
-    rownames(ref@assays$integrated@data) <- translate(rownames(ref@assays$integrated@data))
-    rownames(ref@assays$integrated@scale.data) <- translate(rownames(ref@assays$integrated@scale.data))
-    ref@assays$integrated@var.features <- translate(ref@assays$integrated@var.features)
-    rownames(ref@assays$integrated@meta.features) <- translate(rownames(ref@assays$integrated@meta.features))
-    rownames(ref@reductions$pca@feature.loadings) <- translate(rownames(ref@reductions$pca@feature.loadings))
-  }
+  # Better error handling for insufficient number of cells/anchors
+  pred <- tryCatch({
+    anchors <- Seurat::FindTransferAnchors(
+      reference = ref,
+      query = query,
+      dims = 1:30,
+      reference.reduction = "pca",
+      verbose = FALSE
+    )
 
-  anchors <- Seurat::FindTransferAnchors(
-    reference = ref,
-    query = seurat,
-    dims = 1:30,
-    reference.reduction = "pca",
-    verbose = FALSE
-  )
+    pred_result <- Seurat::TransferData(
+      anchorset = anchors,
+      refdata = ref$MULTI_ID,
+      dims = 1:30,
+      verbose = FALSE
+    )
 
-  # Below, version where "pca" reduction not included in reference data.
-  # withCallingHandlers({
-  #   anchors <- Seurat::FindTransferAnchors(
-  #     reference = ref,
-  #     query = seurat,
-  #     dims = 1:30,
-  #     verbose = FALSE
-  #   )}, warning = function(w) {
-  #     if (grepl("scale.data", conditionMessage(w))) {
-  #       invokeRestart("muffleWarning")
-  #     }
-  # })
-
-  pred <- Seurat::TransferData(
-    anchorset = anchors,
-    refdata = ref$MULTI_ID,
-    dims = 1:30,
-    verbose = FALSE
-  )
-  pred$predicted.id[pred$predicted.id == "CFUE"] <- "EryP"
+    return(pred_result)
+  }, error = function(e) {
+    rlang::warn(paste("ERROR:", conditionMessage(e)))
+    return(NULL)
+  })
 
   if (return.full) {
     return(pred)
   }
 
   if (inherits(input, "Seurat")) {
-    seurat <- Seurat::AddMetaData(seurat, metadata = pred$predicted.id, col.name = "fine.annot")
-    return(seurat)
+    input <- Seurat::AddMetaData(input, metadata = pred$predicted.id, col.name = "fine.annot")
+    return(input)
   } else if (inherits(input, "SingleCellExperiment")) {
     input$fine.annot <- pred$predicted.id
     return(input)
@@ -208,24 +220,20 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
   if (!skip.fine) {
     annotation.fine <- fine_classify(input.hspc, reference = reference, return.full = TRUE)
   } else {
-    rlang::warn("Not enough HSPCs.  Skipping fine annotation.")
+    rlang::warn("Not enough HSPCs. Skipping fine annotation.")
+    annotation.fine <- NULL
   }
 
   rlang::inform("Returning final annotations")
-  if (!skip.fine) {
-    annotations.combined <- merge(annotation.broad["pruned.labels"], annotation.fine["predicted.id"], by=0, all.x=TRUE)
-
-    rownames(annotations.combined) <- annotations.combined$Row.names
-    annotations.combined$Row.names <- NULL
-  } else {
-    annotations.combined <- annotation.broad["pruned.labels"]
-  }
-
-  annotations.combined <- merge(hem.scores["hematopoietic.score"], annotations.combined, by=0, all.x=TRUE)
+  annotations.combined <- merge(hem.scores["hematopoietic.score"], annotation.broad["pruned.labels"], by="row.names", all.x=TRUE)
   rownames(annotations.combined) <- annotations.combined$Row.names
   annotations.combined$Row.names <- NULL
 
-  if (!skip.fine) {
+  annotations.combined <- merge(annotations.combined, annotation.fine["predicted.id"], by="row.names", all.x=TRUE)
+  rownames(annotations.combined) <- annotations.combined$Row.names
+  annotations.combined$Row.names <- NULL
+
+  if (ncol(annotations.combined) == 3) {
     colnames(annotations.combined) <- c("hematopoietic.score", "broad.annot", "fine.annot")
   } else {
     colnames(annotations.combined) <- c("hematopoietic.score", "broad.annot")
@@ -233,7 +241,7 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
 
   annotations.combined$broad.annot[is.na(annotations.combined$broad.annot)] <- "NotHem"
 
-  if (!skip.fine) {
+  if ("fine.annot" %in% colnames(annotations.combined)) {
     annotations.combined$fine.annot[is.na(annotations.combined$fine.annot)] <- "NotHSPC"
 
     annotations.combined$combined.annot <- annotations.combined$fine.annot
@@ -246,35 +254,33 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
     for (nm in names(combined.renaming)) {
       annotations.combined$HSPC.annot[which(annotations.combined$broad.annot == nm)] <- combined.renaming[[nm]]
     }
+  }
 
-    annotations.combined$GMP.annot <- "NotGMP"
-    annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "cMoP")] <- "cMoP"
-    annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "GMP")] <- "mGMP"
-    annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "GP")] <- "GP"
+  annotations.combined$GMP.annot <- "NotGMP"
+  annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "cMoP")] <- "cMoP"
+  annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "GMP")] <- "mGMP"
+  annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "GP")] <- "GP"
+  if ("fine.annot" %in% colnames(annotations.combined)) {
     annotations.combined$GMP.annot[which(annotations.combined$fine.annot == "GMP")] <- "mGMP"
   }
 
   if (return.full) {
-    if (!skip.fine) {
       return(list(hem.scores = hem.scores, broad = annotation.broad, fine = annotation.fine, combined = annotations.combined))
-    } else {
-      return(list(hem.scores = hem.scores, broad = annotation.broad, fine = NA, combined = annotations.combined))
-    }
   }
 
   if (inherits(input, "SingleCellExperiment")) {
     input$hem.score <- annotations.combined$hematopoietic.score
     input$broad.annot <- annotations.combined$broad.annot
-    if (!skip.fine) {
+    if ("fine.annot" %in% colnames(annotations.combined)) {
       input$fine.annot <- annotations.combined$fine.annot
       input$combined.annot <- annotations.combined$combined.annot
       input$HSPC.annot <- annotations.combined$HSPC.annot
-      input$GMP.annot <- annotations.combined$GMP.annot
     }
+    input$GMP.annot <- annotations.combined$GMP.annot
     return(input)
   } else if (inherits(input, "Seurat")) {
-    seurat <- Seurat::AddMetaData(input, metadata = annotations.combined)
-    return(seurat)
+    input <- Seurat::AddMetaData(input, metadata = annotations.combined)
+    return(input)
   }
 }
 
@@ -282,6 +288,13 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
 #'
 #' @param x List of gene names
 #' @returns List of Ensembl IDs
-translate <- function (x) {
+gene_symbol_to_id <- function (x) {
   HemaScribeData$gene.dict[match(x, HemaScribeData$gene.dict$GeneSymbol), "GeneID"]
+}
+
+#' Translate Ensembl IDs to gene names
+#' @param x List of Ensembl IDs
+#' @returns List of gene names
+gene_id_to_symbol <- function(x) {
+  HemaScribeData$gene.dict[match(x, HemaScribeData$gene.dict$GeneID), "GeneSymbol"]
 }
