@@ -4,13 +4,13 @@
 #' scores from a hematopoietic gene list.
 #'
 #' @param input A SingleCellExperiment or Seurat object
-#' @param ncores Number of cores to use (default: 4)
+#' @param ncores Number of cores to use (default: 2)
 #' @returns A dataframe of hematopoietic gene scores
 #' @importFrom scater logNormCounts
 #' @importFrom UCell ScoreSignatures_UCell
 #' @importFrom SingleR SingleR
 #' @export
-hematopoietic_score <- function(input, ncores=4) {
+hematopoietic_score <- function(input, ncores=2) {
   if (inherits(input, "SingleCellExperiment")) {
     sce <- input
 
@@ -61,7 +61,7 @@ broad_classify <- function(input, return.full = FALSE) {
     withCallingHandlers({
       sce <- Seurat::as.SingleCellExperiment(input)
     }, warning = function(w) {
-      if (grepl("scale.data", conditionMessage(w))) {
+      if (grepl("data", conditionMessage(w))) {
         invokeRestart("muffleWarning")
       }
     })
@@ -74,13 +74,16 @@ broad_classify <- function(input, return.full = FALSE) {
   }
 
   if (!startsWith(rownames(sce)[1], "ENSMUSG")) {
-    gene_ids <- AnnotationDbi::mapIds(
-      org.Mm.eg.db::org.Mm.eg.db,
-      keys = rownames(sce),
-      column = "ENSEMBL",
-      keytype = "SYMBOL"
-    )
-    gene_ids <- unique(gene_ids[!is.na(gene_ids)])
+    suppressMessages({
+      gene_ids <- AnnotationDbi::mapIds(
+        org.Mm.eg.db::org.Mm.eg.db,
+        keys = rownames(sce),
+        column = "ENSEMBL",
+        keytype = "SYMBOL"
+      )
+    })
+    gene_ids <- gene_ids[!is.na(gene_ids)]
+    gene_ids <- gene_ids[!duplicated(unlist(gene_ids))]
     sce <- sce[names(gene_ids),]
     rownames(sce) <- gene_ids
   }
@@ -120,19 +123,22 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
     metadata_query <- input@meta.data
   } else if (inherits(input, "SingleCellExperiment")) {
     exp_query <- SingleCellExperiment::counts(input)
-    metadata_query <- SingleCellExperiment::colData(input)
+    metadata_query <- data.frame(SingleCellExperiment::colData(input))
   } else {
     stop("Only SingleCellExperiment and Seurat formats are supported.")
   }
 
   if (!startsWith(rownames(exp_query)[1], "ENSMUSG")) {
-    gene_ids <- AnnotationDbi::mapIds(
-      org.Mm.eg.db::org.Mm.eg.db,
-      keys = rownames(exp_query),
-      column = "ENSEMBL",
-      keytype = "SYMBOL"
-    )
-    gene_ids <- unique(gene_ids[!is.na(gene_ids)])
+    suppressMessages({
+      gene_ids <- AnnotationDbi::mapIds(
+        org.Mm.eg.db::org.Mm.eg.db,
+        keys = rownames(exp_query),
+        column = "ENSEMBL",
+        keytype = "SYMBOL"
+      )
+    })
+    gene_ids <- gene_ids[!is.na(gene_ids)]
+    gene_ids <- gene_ids[!duplicated(unlist(gene_ids))]
     exp_query <- exp_query[names(gene_ids),]
     rownames(exp_query) <- gene_ids
   }
@@ -142,9 +148,10 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
     meta.data = metadata_query
   )
 
-  query <- Seurat::NormalizeData(query)
-  query <- Seurat::ScaleData(query)
-  query <- Seurat::RunPCA(query)
+  query <- Seurat::NormalizeData(query, verbose=FALSE)
+  query <- Seurat::FindVariableFeatures(query, verbose=FALSE)
+  query <- Seurat::ScaleData(query, verbose=FALSE)
+  query <- Seurat::RunPCA(query, verbose=FALSE)
 
   if (!(reference %in% c("WT", "5FU"))) {
     stop("Reference must be one of 'WT' or '5FU'.")
@@ -172,10 +179,10 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
       verbose = FALSE
     )
 
-    return(pred_result)
+    pred_result
   }, error = function(e) {
     rlang::warn(paste("ERROR:", conditionMessage(e)))
-    return(NULL)
+    NULL
   })
 
   if (return.full) {
@@ -204,6 +211,7 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
 #' @param prefilter Hematopoietic score threshold below which cells shall be excluded.  (default: 0)
 #' @param reference Either "WT" or "5FU" (default: "WT")
 #' @param return.full Whether to return full predictions directly (default: FALSE)
+#' @importFrom SummarizedExperiment colData<-
 #' @returns An object of the same type as input with added annotations, or dataframes with classifier results.
 #' @export
 HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FALSE) {
@@ -216,7 +224,7 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
 
   rlang::inform("Classifying into fine cell subtypes")
   input.hspc <- input.hem[,which(annotation.broad$pruned.labels == "HSPC")]
-  skip.fine <- (ncol(input.hspc) < 30)
+  skip.fine <- (ncol(input.hspc) < 50)
   if (!skip.fine) {
     annotation.fine <- fine_classify(input.hspc, reference = reference, return.full = TRUE)
   } else {
@@ -258,7 +266,7 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
 
   annotations.combined$GMP.annot <- "NotGMP"
   annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "cMoP")] <- "cMoP"
-  annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "GMP")] <- "mGMP"
+  annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "mGMP")] <- "mGMP"
   annotations.combined$GMP.annot[which(annotations.combined$broad.annot == "GP")] <- "GP"
   if ("fine.annot" %in% colnames(annotations.combined)) {
     annotations.combined$GMP.annot[which(annotations.combined$fine.annot == "GMP")] <- "mGMP"
@@ -269,14 +277,13 @@ HemaScribe <- function(input, prefilter = 0, reference = "WT", return.full = FAL
   }
 
   if (inherits(input, "SingleCellExperiment")) {
-    input$hem.score <- annotations.combined$hematopoietic.score
-    input$broad.annot <- annotations.combined$broad.annot
     if ("fine.annot" %in% colnames(annotations.combined)) {
-      input$fine.annot <- annotations.combined$fine.annot
-      input$combined.annot <- annotations.combined$combined.annot
-      input$HSPC.annot <- annotations.combined$HSPC.annot
+      to.merge <- annotations.combined[c("hematopoietic.score", "broad.annot", "fine.annot", "combined.annot", "HSPC.annot", "GMP.annot")]
+    } else {
+      to.merge <- annotations.combined[c("hematopoietic.score", "broad.annot", "GMP.annot")]
     }
-    input$GMP.annot <- annotations.combined$GMP.annot
+    to.merge <- to.merge[match(colnames(input), rownames(to.merge)),]
+    colData(input) <- cbind(SingleCellExperiment::colData(input), to.merge)
     return(input)
   } else if (inherits(input, "Seurat")) {
     input <- Seurat::AddMetaData(input, metadata = annotations.combined)

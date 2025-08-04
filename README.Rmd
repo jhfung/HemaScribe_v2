@@ -102,7 +102,7 @@ collins2024.seurat <- HemaScribe(collins2024.seurat, return.full = FALSE)
 head(collins2024.seurat$HSPC.annot)
 ```
 
-Normally, HemaScribe annotation should be run on processed data, after quality control filtering, etc., which we have omitted here for brevity.  The only preprocessing step we insist is log-normalization.  With `return.full = TRUE`, HemaScribe produces a separate report of all the classifier results.  If `return.full = FALSE`, a Seurat object is returned with the metadata populated by the classifier results instead, which may be useful for downstream analysis.  
+Normally, HemaScribe annotation should be run on processed data, after quality control filtering, etc., which we have omitted here for brevity.  The annotation uses the "counts" slot, so normalizing the data is not necessary.  With `return.full = TRUE`, HemaScribe produces a separate report of all the classifier results.  If `return.full = FALSE`, a Seurat object is returned with the metadata populated by the classifier results instead, which may be useful for downstream analysis.  
 
 The classifiers can also be run individually.  See the documentation for more details.  
 

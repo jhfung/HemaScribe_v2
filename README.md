@@ -4,6 +4,7 @@
 # HemaScribe
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 This package contains two main functions to analyze single cell
@@ -135,18 +136,18 @@ collins2024.seurat <- HemaScribe(collins2024.seurat, return.full = FALSE)
 
 head(collins2024.seurat$HSPC.annot)
 #> AAACCCAAGCCTGTCG-1 AAACCCAAGCTCACTA-1 AAACCCAAGTATGTAG-1 AAACCCACAAATTGGA-1 
-#>              "GMP"              "GMP"             "MPP2"             "MPP4" 
+#>              "GMP"              "GMP"     "FcG_neg_MPP3"             "MPP4" 
 #> AAACCCACAATTTCGG-1 AAACCCATCACGTCCT-1 
 #>             "EryP"              "GMP"
 ```
 
 Normally, HemaScribe annotation should be run on processed data, after
 quality control filtering, etc., which we have omitted here for brevity.
-The only preprocessing step we insist is log-normalization. With
-`return.full = TRUE`, HemaScribe produces a separate report of all the
-classifier results. If `return.full = FALSE`, a Seurat object is
-returned with the metadata populated by the classifier results instead,
-which may be useful for downstream analysis.
+The annotation uses the “counts” slot, so normalizing the data is not
+necessary. With `return.full = TRUE`, HemaScribe produces a separate
+report of all the classifier results. If `return.full = FALSE`, a Seurat
+object is returned with the metadata populated by the classifier results
+instead, which may be useful for downstream analysis.
 
 The classifiers can also be run individually. See the documentation for
 more details.

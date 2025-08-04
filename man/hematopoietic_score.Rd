@@ -4,12 +4,12 @@
 \alias{hematopoietic_score}
 \title{Hematopoietic scores}
 \usage{
-hematopoietic_score(input, ncores = 4)
+hematopoietic_score(input, ncores = 2)
 }
 \arguments{
 \item{input}{A SingleCellExperiment or Seurat object}
 
-\item{ncores}{Number of cores to use (default: 4)}
+\item{ncores}{Number of cores to use (default: 2)}
 }
 \value{
 A dataframe of hematopoietic gene scores

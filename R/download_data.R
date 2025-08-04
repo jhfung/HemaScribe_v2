@@ -25,8 +25,6 @@ HemaScribeData <- new.env(parent=emptyenv())
     } else {
       rlang::abort("HemaScribe cannot be loaded because reference data is not found.")
     }
-
-    packageStartupMessage("HemaScribe reference data loaded into HemaScribeData.")
   }
 }
 

@@ -1,3 +1,6 @@
+# HemaScribe 1.1.1
+* Added tests for HemaScribe annotation functions.
+
 # HemaScribe 1.1.0
 * Added function to classify stromal cell types.
 * Added new stromal reference dataset.

@@ -7,7 +7,7 @@
 HemaScape(input, vars = "orig.ident", sigma = 0.1)
 }
 \arguments{
-\item{input}{A Seurat obejct with count data.}
+\item{input}{A Seurat object with count data.}
 
 \item{vars}{Query batch variable(s) to integrate over (column names in metadata of the Seurat object).}
 
