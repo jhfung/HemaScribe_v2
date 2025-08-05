@@ -4,21 +4,20 @@
 \alias{stroma_classify}
 \title{Stroma classifier}
 \usage{
-stroma_classify(input, broad.classify = TRUE, return.seurat = TRUE)
+stroma_classify(input, broad.classify = TRUE, return.full = FALSE)
 }
 \arguments{
-\item{input}{A Seurat object}
+\item{input}{A SingleCellExperiment or Seurat object}
 
 \item{broad.classify}{Whether to run "broad annotation" on hematopoietic cells (default: TRUE)}
 
-\item{return.seurat}{Whether to return Seurat object, otherwise table (default: TRUE)}
+\item{return.full}{Whether to return full predictions directly (default: FALSE)}
 }
 \value{
-A Seurat object with added annotations, or a table of classifier results
+An object of the same type as input with added annotations, or a dataframe with classifier results
 }
 \description{
 This performs annotation of mouse bone marrow stromal cell types using the
 single cell references from Swann et al. (2024), and also optionally the
-broad HemaScribe annotation on hematopoietic cells. Currently only supports
-Seurat object as inputs.
+broad HemaScribe annotation on hematopoietic cells.
 }

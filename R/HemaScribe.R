@@ -125,7 +125,7 @@ fine_classify <- function(input, reference = "WT", return.full = FALSE) {
     exp_query <- SingleCellExperiment::counts(input)
     metadata_query <- data.frame(SingleCellExperiment::colData(input))
   } else {
-    stop("Only SingleCellExperiment and Seurat formats are supported.")
+    rlang::abort("Only SingleCellExperiment and Seurat formats are supported.")
   }
 
   if (!startsWith(rownames(exp_query)[1], "ENSMUSG")) {

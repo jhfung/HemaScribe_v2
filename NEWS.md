@@ -1,3 +1,7 @@
+# HemaScribe 1.1.2
+* Added support for Ensembl IDs in stroma_classify.
+* Added tests for stroma_classify.
+
 # HemaScribe 1.1.1
 * Added tests for HemaScribe annotation functions.
 

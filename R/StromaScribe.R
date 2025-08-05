@@ -2,33 +2,37 @@
 #'
 #' This performs annotation of mouse bone marrow stromal cell types using the
 #' single cell references from Swann et al. (2024), and also optionally the
-#' broad HemaScribe annotation on hematopoietic cells. Currently only supports
-#' Seurat object as inputs.
+#' broad HemaScribe annotation on hematopoietic cells.
 #'
-#' @param input A Seurat object
+#' @param input A SingleCellExperiment or Seurat object
 #' @param broad.classify Whether to run "broad annotation" on hematopoietic cells (default: TRUE)
-#' @param return.seurat Whether to return Seurat object, otherwise table (default: TRUE)
-#' @returns A Seurat object with added annotations, or a table of classifier results
+#' @param return.full Whether to return full predictions directly (default: FALSE)
+#' @returns An object of the same type as input with added annotations, or a dataframe with classifier results
 #' @export
-stroma_classify <- function(input, broad.classify = TRUE, return.seurat = TRUE) {
+stroma_classify <- function(input, broad.classify = TRUE, return.full = FALSE) {
   if (inherits(input, "Seurat")) {
     exp_query <- input[["RNA"]]$counts
     metadata_query <- input@meta.data
+  } else if (inherits(input, "SingleCellExperiment")) {
+    exp_query <- SingleCellExperiment::counts(input)
+    metadata_query <- data.frame(SingleCellExperiment::colData(input))
   } else {
-    rlang::abort("Input must be a Seurat object.")
+    rlang::abort("Only SingleCellExperiment and Seurat formats are supported.")
   }
 
-  if (startsWith(rownames(exp_query)[1], "ENSMUSG")) {
-    gene_symbols <- AnnotationDbi::mapIds(
-      org.Mm.eg.db::org.Mm.eg.db,
-      keys = rownames(exp_query),
-      column = "SYMBOL",
-      keytype = "ENSEMBL"
-    )
-    gene_symbols <- unique(gene_symbols[!is.na(gene_symbols)])
-
-    exp_query <- exp_query[names(gene_symbols),]
-    rownames(exp_query) <- gene_symbols
+  if (!startsWith(rownames(exp_query)[1], "ENSMUSG")) {
+    suppressMessages({
+      gene_ids <- AnnotationDbi::mapIds(
+        org.Mm.eg.db::org.Mm.eg.db,
+        keys = rownames(exp_query),
+        column = "ENSEMBL",
+        keytype = "SYMBOL"
+      )
+    })
+    gene_ids <- gene_ids[!is.na(gene_ids)]
+    gene_ids <- gene_ids[!duplicated(unlist(gene_ids))]
+    exp_query <- exp_query[names(gene_ids),]
+    rownames(exp_query) <- gene_ids
   }
 
   ref.stroma <- HemaScribeData$ref.stroma
@@ -43,14 +47,10 @@ stroma_classify <- function(input, broad.classify = TRUE, return.seurat = TRUE) 
   rlang::inform("Predicting cell type annotations")
   mapped <- symphony::knnPredict(query, ref.stroma, ref.stroma$meta_data$Type, save_as="stroma.annot")
   pred <- mapped$meta_data[,c("stroma.annot", "stroma.annot_prob")]
-  input <- Seurat::AddMetaData(input, metadata=pred)
 
   if (broad.classify) {
     hem.cats <- c("EryP1", "EryP2", "EryP3", "EryP4", "EryP5", "HSPC", "Lymph", "MkP", "Mono", "Neut1", "Neut2")
-    input.hem <- subset(input, subset=(input$stroma.annot %in% hem.cats))
-    if (!("data" %in% SeuratObject::Layers(input.hem))) {
-      input.hem <- Seurat::NormalizeData(input.hem, scale.factor=10000, verbose=FALSE)
-    }
+    input.hem <- input[,which(pred$stroma.annot %in% hem.cats)]
 
     pred.broad <- broad_classify(input.hem, return.full=TRUE)
     pred.broad <- data.frame(pred.broad)
@@ -63,13 +63,19 @@ stroma_classify <- function(input, broad.classify = TRUE, return.seurat = TRUE) 
     rownames(pred) <- pred$Row.names
     pred$Row.names <- NULL
 
-    input <- Seurat::AddMetaData(input, metadata=pred.broad)
-  }
+    if (return.full) {
+      return(pred)
+    }
 
-  if (return.seurat) {
-    return(input)
-  } else {
-    return(pred)
+    if (inherits(input, "Seurat")) {
+      output <- Seurat::AddMetaData(input, metadata = pred[c("stroma.annot", "broad.annot")])
+      return(output)
+    } else if (inherits(input, "SingleCellExperiment")) {
+      output <- input
+      pred <- pred[match(colnames(output), rownames(pred)),]
+      colData(output) <- cbind(SingleCellExperiment::colData(output), pred)
+      return(output)
+    }
   }
 }
 
