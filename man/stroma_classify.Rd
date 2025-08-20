@@ -8,7 +8,11 @@ stroma_classify(
   input,
   broad.classify = TRUE,
   return.full = FALSE,
+<<<<<<< HEAD
   do.umap = FALSE
+=======
+  do.umap = TRUE
+>>>>>>> b423391 (Added UMAP projection in stroma_classify)
 )
 }
 \arguments{
@@ -18,7 +22,7 @@ stroma_classify(
 
 \item{return.full}{Whether to return full predictions directly (default: FALSE)}
 
-\item{do.umap}{Whether to add UMAP coordinates, if return.full is FALSE (default: FALSE).}
+\item{do.umap}{Whether to add UMAP coordinates (default: TRUE)}
 }
 \value{
 An object of the same type as input with added annotations, or a dataframe with classifier results
