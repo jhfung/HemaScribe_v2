@@ -1,6 +1,6 @@
 Package: HemaScribe
 Title: Hematopoietic Cell Type Annotations and Mapping of Query Cells to the HemaScribe Reference Trajectory
-Version: 1.1.2
+Version: 1.1.3
 Author: Jun Hou Fung, Ziwei Chen
 Maintainer: Jun Hou Fung <jf3380@cumc.columbia.edu>, Ziwei Chen <zc2703@cumc.columbia.edu>
 Description: This package performs multilevel annotation of hematopoietic stem and
@@ -31,7 +31,8 @@ Imports:
     stringr,
     SummarizedExperiment (>= 1.32.0),
     symphony,
-    UCell
+    UCell,
+    uwot
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2

@@ -4,7 +4,12 @@
 \alias{stroma_classify}
 \title{Stroma classifier}
 \usage{
-stroma_classify(input, broad.classify = TRUE, return.full = FALSE)
+stroma_classify(
+  input,
+  broad.classify = TRUE,
+  return.full = FALSE,
+  do.umap = FALSE
+)
 }
 \arguments{
 \item{input}{A SingleCellExperiment or Seurat object}
@@ -12,6 +17,8 @@ stroma_classify(input, broad.classify = TRUE, return.full = FALSE)
 \item{broad.classify}{Whether to run "broad annotation" on hematopoietic cells (default: TRUE)}
 
 \item{return.full}{Whether to return full predictions directly (default: FALSE)}
+
+\item{do.umap}{Whether to add UMAP coordinates, if return.full is FALSE (default: FALSE).}
 }
 \value{
 An object of the same type as input with added annotations, or a dataframe with classifier results

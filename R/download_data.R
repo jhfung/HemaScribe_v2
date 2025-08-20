@@ -4,7 +4,7 @@ HemaScribeData <- new.env(parent=emptyenv())
   if (!nzchar(Sys.getenv("R_CMD_CHECK"))) {
     dataDir <- tools::R_user_dir("HemaScribe_v2", which = "data")
 
-    files <- c("HemaScribe-data.rdx", "HemaScribe-data.rdb", "StromaScribe-data.rdx", "StromaScribe-data.rdb", "HemaScape-data.rda")
+    files <- c("HemaScribe-data.rdx", "HemaScribe-data.rdb", "StromaScribe-data.rdx", "StromaScribe-data.rdb", "StromaScribe-UMAP.uwot", "HemaScape-data.rda")
 
     for (file in files) {
       path <- file.path(dataDir, file)

@@ -1,3 +1,6 @@
+# HemaScribe 1.1.3
+* Added UMAP projection in stroma_classify.
+
 # HemaScribe 1.1.2
 * Added support for Ensembl IDs in stroma_classify.
 * Added tests for stroma_classify.
